@@ -1,11 +1,9 @@
 import math
 import sys
-from datetime import time
 
 import numpy as np
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-import seaborn as sns
+
 from sklearn.manifold import TSNE
 import umap
 
@@ -275,7 +273,8 @@ def half_DIRECT(f, bands, iter, D):
 
 
 print("TRY DIRECT")
-iter = 10
+direct_time_sta = time.perf_counter()
+iter = 50000
 D = 15
 bands = np.zeros((D, 2))
 for i in range(D):
@@ -287,6 +286,11 @@ bands_list = bands_list * 10.24 - 5.12
 print(bands_list)
 
 print("DIRECT OK")
+direct_time_end = time.perf_counter()
+
+print(direct_time_end - direct_time_sta)
+
+low_time_start = time.perf_counter()
 
 if(args[2] == "umap"):
     print("TRY UMAP")
@@ -295,6 +299,8 @@ if(args[2] == "umap"):
     embedding = reducer.transform(bands_list)
     assert(np.all(embedding == reducer.embedding_))
     print(embedding)
+    low_time_end = time.pref_counter()
+    print(low_time_end - low_time_start)
     """
     plt.scatter(embedding[:, 0], embedding[:, 1])
     plt.gca().set_aspect('equal', 'datalim')
@@ -307,7 +313,15 @@ elif(args[2] == "t-sne"):
     print("TRY t-SNE")
     tsne = TSNE(n_components=2, random_state = 0,perplexity = 20, n_iter = 1000, angle = 0.7)
     embedding = tsne.fit_transform(bands_list)
-
+    """
+    plt.scatter(embedding[:, 0], embedding[:, 1])
+    plt.gca().set_aspect('equal', 'datalim')
+    plt.colorbar(boundaries=np.arange(11)-0.5).set_ticks(np.arange(19))
+    plt.title('t-SNE')
+    plt.show()
+    """
+    low_time_end = time.pref_counter()
+    print(low_time_end - low_time_start)
 ##############################################################################
 class Individual:
     def __init__(self, dim, bounds, id):
@@ -536,7 +550,7 @@ class SHADE:
 
         return best
 ##########################################
-
+shade_time_start = time.perf_counter()
 dim = 2 #dimension size
 NP = 50 #population size
 maxFEs = 500 #maximum number of objective function evaluations
@@ -551,3 +565,5 @@ de = SHADE(dim, maxFEs, bounds, H, NP, minPopSize)
 resp = de.run()
 print(resp)
 print(object_fun(resp.features))
+shade_time_end = time.perf_counter()
+print(shade_time_end - shade_time_start)
