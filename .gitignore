@@ -6,5 +6,6 @@
 # Datasource local storage ignored files
 /dataSources/
 /dataSources.local.xml
-/SHADE1.1_CEC2014/
-SHADE1.1.1_CEC2014_c++.zip
+/archive
+*.txt
+
