@@ -33,8 +33,10 @@ def object_fun(x):
         return float(y)
     elif(args[1] == "rastrigin"):
         y = 0.
-
-
+        for i in x:
+            y += pow(i, 2) - (10*math.cos(2*math.pi*i))
+        y += 10*D
+        return y
 def get_center_point(bands):
     """
     center pointを返す関数
@@ -247,7 +249,8 @@ def half_DIRECT(f, bands, iter, D):
     divide_points_list = []
     num = 0
     for i in range(iter):
-        if(num > 50000):
+        print('iter = {}, num = {}'.format(i, num))
+        if(num > 500):
             divide_points_list_np = np.array(divide_points_list)
             a = int(len(divide_points_list)/D)
             b = D
@@ -275,7 +278,7 @@ def half_DIRECT(f, bands, iter, D):
 
 print("TRY DIRECT")
 direct_time_sta = time.perf_counter()
-iter = 50000
+iter = 500
 D = 15
 bands = np.zeros((D, 2))
 for i in range(D):
@@ -289,7 +292,7 @@ print(bands_list)
 print("DIRECT OK")
 direct_time_end = time.perf_counter()
 
-print(direct_time_end - direct_time_sta)
+print('{}[s]'.format(direct_time_end - direct_time_sta))
 
 low_time_start = time.perf_counter()
 
@@ -300,8 +303,8 @@ if(args[2] == "umap"):
     embedding = reducer.transform(bands_list)
     assert(np.all(embedding == reducer.embedding_))
     print(embedding)
-    low_time_end = time.pref_counter()
-    print(low_time_end - low_time_start)
+    low_time_end = time.perf_counter()
+    print('{}[s]'.format(low_time_end - low_time_start))
     """
     plt.scatter(embedding[:, 0], embedding[:, 1])
     plt.gca().set_aspect('equal', 'datalim')
@@ -321,8 +324,8 @@ elif(args[2] == "t-sne"):
     plt.title('t-SNE')
     plt.show()
     """
-    low_time_end = time.pref_counter()
-    print(low_time_end - low_time_start)
+    low_time_end = time.perf_counter()
+    print('{}[s]'.format(low_time_end - low_time_start))
 ##############################################################################
 class Individual:
     def __init__(self, dim, bounds, id):
@@ -567,4 +570,4 @@ resp = de.run()
 print(resp)
 print(object_fun(resp.features))
 shade_time_end = time.perf_counter()
-print(shade_time_end - shade_time_start)
+print('{}[s]'.format(shade_time_end - shade_time_start))
