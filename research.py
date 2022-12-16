@@ -266,7 +266,7 @@ def half_DIRECT(f, bands, iter, D, num):
                 center_point = get_center_point(divided_bands)
                 min_f = min(f(center_point), min_f)
             total_bands_list += pure_divided_bands_list
-        cnt = len(divide_points_list)
+        cnt = int(len(divide_points_list)/D)
     print(len(divide_points_list),num)
     divide_points_list_np = np.array(divide_points_list)
     a = int(len(divide_points_list)/D)
@@ -303,7 +303,9 @@ if(args[2] == "umap"):
     reducer = umap.UMAP()
     reducer.fit(bands_list)
     embedding = reducer.transform(bands_list)
-    print(len(embedding))
+    print(len(embedding), embedding.shape)
+    print(type(embedding))
+
     low_time_end = time.perf_counter()
     low_time = low_time_end - low_time_start
     print('{}[s]'.format(low_time))
@@ -319,8 +321,8 @@ elif(args[2] == "tsne"):
     print("TRY t-SNE")
     tsne = TSNE(perplexity = 20, angle = 0.7)
     embedding = tsne.fit_transform(bands_list)
-    print(len(embedding))
-
+    print(len(embedding), embedding.shape)
+    print(type(embedding))
     """
     plt.scatter(embedding[:, 0], embedding[:, 1])
     plt.gca().set_aspect('equal', 'datalim')
@@ -567,8 +569,9 @@ F = 0.5
 CR = 0.5
 H = 50#archive size
 minPopSize = 4
-
 bounds = embedding
+
+
 de = SHADE(dim, maxFEs, bounds, H, NP, minPopSize)
 resp = de.run()
 print(resp)
