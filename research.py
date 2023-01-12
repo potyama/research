@@ -17,6 +17,18 @@ args = sys.argv
 DIRECT法 ------> UMAP/t-SNE ------> SHADE
 となっている。
 
+    plt.scatter(embedding[:, 0], embedding[:, 1])
+    plt.gca().set_aspect('equal', 'datalim')
+    plt.colorbar(boundaries=np.arange(11)-0.5).set_ticks(np.arange(19))
+    plt.title('t-SNE')
+    plt.show()
+
+    plt.scatter(embedding[:, 0], embedding[:, 1])
+    plt.gca().set_aspect('equal', 'datalim')
+    plt.colorbar(boundaries=np.arange(11)-0.5).set_ticks(np.arange(19))
+    plt.title('UMAP')
+    plt.show()
+
 """
 
 
@@ -34,9 +46,16 @@ def object_fun(x):
     elif(args[1] == "rastrigin"):
         y = 0.
         for i in x:
-            y += pow(i, 2) - (10*math.cos(2*math.pi*i))
+            y += np.power(i, 2) - (10*np.cos(2*np.pi*i))
         y += 10*D
-        return y
+        return float(y)
+    elif(args[1] == "rosenblock"):
+        y=0.
+        for i in range(len(x)-1):
+            t1 = 100*(x[i+1] -x[i] ** 2) ** 2
+            t2 = (x[i-1])** 2
+            y += t1 + t2
+        return float(y)
 def get_center_point(bands):
     """
     center pointを返す関数
@@ -80,12 +99,7 @@ def get_max_side_dimension_list(bands):
     max_side_dimension_list = []
     for dimension in range(D):
         length = get_len_of_interval(bands[dimension])
-        #if math.isclose(max_side_length, length):
         max_side_dimension_list.append(dimension)
-        #elif max_side_length < length:
-        #    max_side_dimension_list.clear()
-        #    max_side_length = length
-        #    max_side_dimension_list.append(dimension)
     return max_side_dimension_list
 
 
@@ -118,25 +132,12 @@ def get_divided_bands_list(f, bands, divided_points):
         fa = f(a_point)
         fb = f(b_point)
         wi = min(fa, fb)
-        return wi
-    def get_point(dimension):
-        """
-        :param dimension: ある次元D_i
-        :return:a_point or b_point: c-delta or c+delta point
-        """
-        a_point = center_point.copy()
-        a_point[dimension] -= delta
-        b_point = center_point.copy()
-        b_point[dimension] += delta
-        fa = f(a_point)
-        fb = f(b_point)
         if(fa > fb):
-            return a_point[dimension][0]
+            divided_points.append(b_point[dimension][0])
         else:
-            return b_point[dimension][0]
+            divided_points.append(a_point[dimension][0])
+        return wi
 
-    for i in range(len(max_side_dimension_list)):
-        divided_points.append(get_point(max_side_dimension_list[i]))
     sorted_max_side_dimension_list = sorted(max_side_dimension_list, key=get_wi)
     # 3つの空間に分割する
     divided_bands_list = [bands]
@@ -247,10 +248,10 @@ def half_DIRECT(f, bands, iter, D, num):
     total_bands_list = [bands]
     pure_divided_bands_list = [bands]
     divide_points_list = []
-    cnt = 0
+
     for i in range(iter):
-        print('iter = {}, cnt = {}'.format(i, cnt))
-        if(num < cnt):
+        print('iter = {}, cnt = {}'.format(i, int(len(divide_points_list)/D)))
+        if(num < int(len(divide_points_list)/D)):
             divide_points_list_np = np.array(divide_points_list)
             a = int(len(divide_points_list)/D)
             b = D
@@ -266,7 +267,6 @@ def half_DIRECT(f, bands, iter, D, num):
                 center_point = get_center_point(divided_bands)
                 min_f = min(f(center_point), min_f)
             total_bands_list += pure_divided_bands_list
-        cnt = int(len(divide_points_list)/D)
     print(len(divide_points_list),num)
     divide_points_list_np = np.array(divide_points_list)
     a = int(len(divide_points_list)/D)
@@ -274,65 +274,6 @@ def half_DIRECT(f, bands, iter, D, num):
     convert_list = divide_points_list_np.reshape(a, b)
     return convert_list
 
-
-
-print("TRY DIRECT")
-direct_time_sta = time.perf_counter()
-iter = 50000
-num = int(args[4])/2
-D = int(args[3])
-bands = np.zeros((D, 2))
-for i in range(D):
-    bands[i] = [0, 1]
-
-bands_list = DIRECT(object_fun, bands, iter, num)
-bands_list = bands_list * 10.24 - 5.12
-
-print(bands_list)
-print(bands_list.shape)
-print(None in bands_list)
-print("DIRECT OK")
-direct_time_end = time.perf_counter()
-direct_time = direct_time_end - direct_time_sta
-print('{}[s]'.format(direct_time))
-
-low_time_start = time.perf_counter()
-
-if(args[2] == "umap"):
-    print("TRY UMAP")
-    reducer = umap.UMAP()
-    reducer.fit(bands_list)
-    embedding = reducer.transform(bands_list)
-    print(len(embedding), embedding.shape)
-    print(type(embedding))
-
-    low_time_end = time.perf_counter()
-    low_time = low_time_end - low_time_start
-    print('{}[s]'.format(low_time))
-    """
-    plt.scatter(embedding[:, 0], embedding[:, 1])
-    plt.gca().set_aspect('equal', 'datalim')
-    plt.colorbar(boundaries=np.arange(11)-0.5).set_ticks(np.arange(19))
-    plt.title('UMAP')
-    plt.show()
-    """
-    print("UMAP OK")
-elif(args[2] == "tsne"):
-    print("TRY t-SNE")
-    tsne = TSNE(perplexity = 20, angle = 0.7)
-    embedding = tsne.fit_transform(bands_list)
-    print(len(embedding), embedding.shape)
-    print(type(embedding))
-    """
-    plt.scatter(embedding[:, 0], embedding[:, 1])
-    plt.gca().set_aspect('equal', 'datalim')
-    plt.colorbar(boundaries=np.arange(11)-0.5).set_ticks(np.arange(19))
-    plt.title('t-SNE')
-    plt.show()
-    """
-    low_time_end = time.perf_counter()
-    low_time = low_time_end - low_time_start
-    print('{}[s]'.format(low_time))
 ##############################################################################
 class Individual:
     def __init__(self, dim, bounds, id):
@@ -359,7 +300,7 @@ class SHADE:
         self.F = None
         self.CR = None
         self.P = None
-
+        self.eps = 10 ** (-5)
         self.Aext = None
         self.M_F = None
         self.M_CR = None
@@ -465,7 +406,6 @@ class SHADE:
 
             #generation iterator
             for i in range(self.NP):
-
                 original = self.P[i]
 
                 r = random.randint(0, self.H -1)
@@ -561,13 +501,59 @@ class SHADE:
         print(fes)
         return best
 ##########################################
+print("TRY DIRECT")
+direct_time_sta = time.perf_counter()
+iter = 50000
+num = int(args[4])
+D = int(args[3])
+bands = np.zeros((D, 2))
+for i in range(D):
+    bands[i] = [0, 1]
+
+bands_list = DIRECT(object_fun, bands, iter, num)
+if(args[1] == "rosenblock"):
+    bands_list = bands_list * 10 - 5
+else:
+    bands_list = bands_list * 10.24 - 5.12
+
+print(bands_list.shape)
+
+print("DIRECT OK")
+direct_time_end = time.perf_counter()
+direct_time = direct_time_end - direct_time_sta
+print('{}[s]'.format(direct_time))
+
+low_time_start = time.perf_counter()
 shade_time_start = time.perf_counter()
+if(args[2] == "umap"):
+    print("TRY UMAP")
+    reducer = umap.UMAP(n_neighbors=20, min_dist=0.7)
+    embedding = reducer.fit_transform(bands_list)
+    print(len(embedding), embedding.shape)
+    print(type(embedding))
+
+    low_time_end = time.perf_counter()
+    low_time = low_time_end - low_time_start
+    print('{}[s]'.format(low_time))
+
+    print("UMAP OK")
+elif(args[2] == "tsne"):
+    print("TRY t-SNE")
+    tsne = TSNE(perplexity = 20, angle = 0.7)
+    embedding = tsne.fit_transform(bands_list)
+    print(len(embedding), embedding.shape)
+    print(type(embedding))
+
+    low_time_end = time.perf_counter()
+    low_time = low_time_end - low_time_start
+    print('{}[s]'.format(low_time))
+
 dim = 2 #dimension size
-NP = 50 #population size
-maxFEs = int(args[4])/2 #maximum number of objective function evaluations
+NP = 500 #population size
+maxFEs = 99500 #maximum number of objective function evaluations
 F = 0.5
 CR = 0.5
-H = 50#archive size
+H = 500#archive size
 minPopSize = 4
 bounds = embedding
 
@@ -575,7 +561,6 @@ bounds = embedding
 de = SHADE(dim, maxFEs, bounds, H, NP, minPopSize)
 resp = de.run()
 print(resp)
-min = object_fun(resp.features)
 print(object_fun(resp.features))
 shade_time_end = time.perf_counter()
 shade_time = shade_time_end - shade_time_start
@@ -583,8 +568,8 @@ print('{}[s]'.format(shade_time))
 
 f = open('result.txt', 'a')
 if args[2] == "umap":
-    f.write('D:{}, function={},num = {},maxFEs = {},DIRECT time:{}[s], UMAP time:{}[s],SHADE time:{}[s],min = {}\n'.format(D,args[1],num, maxFEs, direct_time, low_time, shade_time, min))
-if args[2] == "t-sne":
-    f.write('D:{}, function={},num = {},maxFEs = {}, DIRECT time:{}[s], t-SNE time:{}[s],SHADE time:{}[s],min = {}\n'.format(D,args[1],num, maxFEs,direct_time, low_time, shade_time, min))
+    f.write('D:{}, function={},num = {},maxFEs = {}, UMAP time:{}[s],min = {}\n'.format(D,args[1],num, maxFEs, low_time, object_fun(resp.features)))
+if args[2] == "tsne":
+    f.write('D:{}, function={},num = {},maxFEs = {}, t-SNE time:{}[s],min = {}\n'.format(D,args[1],num, maxFEs, low_time, object_fun(resp.features)))
 
 f.close()
