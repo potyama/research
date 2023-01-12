@@ -234,7 +234,7 @@ def half_DIRECT(f, bands, iter, D, num):
     DIRECT Algorithm [0,1]であることに注意
     Note that the range of bands is [0,1]
 
-    :param f:function(x)
+    :param f:fun_convert(x)
     :param bands:the search range for the unit hypercube
     :param iter:number iterations for the unit hypercube.
     :param D:dimenton
